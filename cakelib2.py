@@ -39,6 +39,8 @@ GNU General Public License for more details.
 
 version: Sexy (INCOMPLETE)
 
+Added comments from pika/piks.
+
 set _uids, _fullhistory, and _lastmsg to False for better performance on low end systems
 '''
 
@@ -125,6 +127,7 @@ class Chat:
         return x
 
     def whois(self, string):
+        '''Find who someone is based off their Unique Identification number'''
         x = []
         for key, value in uids.items():
             uid = key
@@ -159,6 +162,7 @@ class Chat:
         else: return False
 
     def delete(self, name):
+        '''delete laste message using the username given'''
         if self.isMod(self.main.user):
             info = self.gMessage(name)
             if info:
@@ -179,12 +183,20 @@ class Chat:
     def login(self, user, password):
         self.send('blogin', user, password)
 
+    def relogin(self, user, password):
+        '''(addition by piks) auto detect if anon or not and login as proper user, bool statement False = fail True = pass'''
+        self.send("blogout")
+        if not user: return False
+        if password: self.send("blogin", user, password)
+        else: self.send("blogin",user)
+        return True
+
     @property
-    def logout(self):
-        self.send('blogout')
+    def logout(self): self.send('blogout')
         
     @property
     def nuke(self):
+        '''clear the entire chat'''
         if self.main.user == self.chatInfo.owner:
             self.chatInfo.history.clear()
             return self.send('clearall')
@@ -200,6 +212,7 @@ class Chat:
 class User:
 
     def __init__(self, **kw):
+        '''variables for this are set on the gUser function'''
         [setattr(self, x, kw[x]) for x in kw]
 
 ####
@@ -245,7 +258,6 @@ class Interpret:
         self.main = main
 
     def lemonize(self, data, net):
-        #print(data)
         data = [x.rstrip('\r\n').split(':') for x in data.decode('utf-8').split('\x00')]
         [self.event_call(x[0],x[1:], net) for x in data]
 
@@ -481,6 +493,7 @@ class Main:
         self.matrix()
 
     def lemonate(self):
+        '''This is called on startup, and is basically an onInit call. Look at the main.py for its use.'''
         pass
 
     def matrix(self):
@@ -556,6 +569,7 @@ def anon_id(_id, uid):
         )% 10) for i in range(4)])
 
 def gUser(user, alias, uid, _id):
+    '''Parses the user name and creates the user class.'''
     if user == '': user = 'None'
     if user == 'None':
         if alias == '' or 'None':
@@ -580,6 +594,7 @@ def rUids(k, v):
             uids[key] = x
 
 def font_parse(x):
+    '''Emulates the HTML5 font setup. It is kind of messy but it works.'''
     x = x.replace("<font color='#",'<f x')
     x = x.replace('">', '="0">')
     x = x.replace("'>", '="0">')
@@ -590,6 +605,7 @@ def font_parse(x):
     return x+close
 
 def clean(msg):
+    '''Parses a users message.'''
     font_tag = regex('<f (.*?)>', msg.content, '000')
     name_tag = regex('<n(.*?)/>', msg.content, '000')
     msg.user.fSize = regex('x(.*?)=', font_tag, '12')[0:2]
