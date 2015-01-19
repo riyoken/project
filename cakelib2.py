@@ -162,7 +162,7 @@ class Chat:
         else: return False
 
     def delete(self, name):
-        '''delete laste message using the username given'''
+        '''delete last message using the username given'''
         if self.isMod(self.main.user):
             info = self.gMessage(name)
             if info:
