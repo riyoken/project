@@ -110,5 +110,5 @@ if __name__ == '__main__':
         p, k = load_utill()
         Lemonator.start('voxela',core.decrypt(k, p), core.room_list, pm=True)
     except:
-        'cake' == 'cake'
+        'caek' == 'WATER MALONE'
         print(get_error())
