@@ -158,6 +158,28 @@ def inbox(x, user, uid, roomname, othervars):
                     return 'Message from %s to %s: %s - sent %s ago.' % (_user, name, msg, getSTime(float(stime)))
             except KeyError: return 'Fail'
 
+def gws(x, user, uid, rank, roomname, othervars):
+    search = x.split()
+    search = '%20'.join(map(str, search))
+    url = 'http://ajax.googleapis.com/ajax/services/search/web?v=1.0&q=%s&safe=off' % search
+    search_results = urlreq.urlopen(url)
+    js = json.loads(search_results.read().decode())
+    rest = list(map(lambda x: x['unescapedUrl'], js['responseData']['results']))
+    rest = '<br /><br />' + '<br />'.join(rest)
+    return rest
+
+def yt(x, user, uid, rank, roomname, othervars):
+    x = x.replace(' ','+')
+    url = 'http://gdata.youtube.com/feeds/api/videos?q='+x+'&v=2&alt=jsonc'
+    ret = json.loads(urllib.request.urlopen(url).read().decode())
+    v = ret['data']['items'][0]['player']['default']
+    rating = ret['data']['items'][0]['rating']
+    views = ret['data']['items'][0]['viewCount']
+    title = ret['data']['items'][0]['title']
+    return '%s: rating: %s - veiws: %s<br/>%s' % (title, rating, views, v)
+
+def ytb(x, user, uid, rank, roomname, othervars):
+    return yt(x, user, uid, rank, roomname, othervars)
 
 def getBGTime(x):
     total_seconds = float(x - time.time())
@@ -254,7 +276,6 @@ def tumblr(x, user, uid, roomname, othervars):
         end = w.split('.')[4]
         end = end[:end.index('"')]
     except: return tumblr(original, '','','','')
-    print(end)
     w = w[w.index('http://'):w.index(end)+3]
     return '<b>tumblr link: %s<br/>image: %s'% (selection, w)
     
