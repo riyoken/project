@@ -11,6 +11,8 @@ from text import notify, rmind, room_list, jsonrooms, _mods, _board
 
 unescape = lambda text: html.parser.HTMLParser().unescape(text)
 weighted_choice = lambda s : random.choice(sum(([v]*wt for v,wt in s),[]))
+opener = urllib.request.build_opener()
+opener.addheaders=[('User-agent', 'Mozilla/5.0')]
 
 def unescape(text): return html.parser.HTMLParser().unescape(text)
 def escape(text): return ''.join(['&#%s;' % ord(x) for x in text])
@@ -221,20 +223,40 @@ def board(x, user, uid, roomname, othervars):
     return '<br/><br/>'+ '<br/>'.join(y)
 
 def gender(x):
-        resp = urllib.request.urlopen("http://st.chatango.com/profileimg/%s/%s/%s/mod1.xml" % (x.lower()[0], x.lower()[1], x.lower()))
-        try: data = resp.read().decode()
-        except: data = resp.read().decode('latin-1')
-        try: ru = re.compile(r'<s>(.*?)</s>', re.IGNORECASE).search(data).group(1)
-        except: ru = "?"
-        ret = urllib.parse.unquote(ru)
-        if ret == "M": r = "him"
-        elif ret == "F": r = "her"
-        elif ret == "?": r = "them"        
-        return r
+    resp = urllib.request.urlopen("http://st.chatango.com/profileimg/%s/%s/%s/mod1.xml" % (x.lower()[0], x.lower()[1], x.lower()))
+    try: data = resp.read().decode()
+    except: data = resp.read().decode('latin-1')
+    try: ru = re.compile(r'<s>(.*?)</s>', re.IGNORECASE).search(data).group(1)
+    except: ru = "?"
+    ret = urllib.parse.unquote(ru)
+    if ret == "M": r = "him"
+    elif ret == "F": r = "her"
+    elif ret == "?": r = "them"        
+    return r
 
 def is_online(user):
-        resp = urllib.request.urlopen("http://"+user+".chatango.com").read().decode()
-        return str(bool('chat with' in resp.lower()))+ ' '+user
+    resp = urllib.request.urlopen("http://"+user+".chatango.com").read().decode()
+    return str(bool('chat with' in resp.lower()))+ ' '+user
+
+def tumblr(x, user, uid, roomname, othervars):
+    original = x
+    '''command suggested by tasu'''
+    x = 'https://www.tumblr.com/search/'+x.replace(' ','+')
+    data = urllib.request.urlopen(x).read().decode()
+    data = data.replace('\n', '').replace('\\','')
+    v = re.findall(r'data-pin-url="(.*?)" data-pin-description', data)
+    try: selection = random.choice(v)
+    except: return 'No results found.'
+    data = urllib.request.urlopen(selection).read().decode()
+    w = re.findall(r'<img(.*?)>', data)
+    w = ''.join([x for x in w if 'tumblr_' in x])
+    try:
+        end = w.split('.')[4]
+        end = end[:end.index('"')]
+    except: return tumblr(original, '','','','')
+    print(end)
+    w = w[w.index('http://'):w.index(end)+3]
+    return '<b>tumblr link: %s<br/>image: %s'% (selection, w)
     
 def mod(x, user, uid, roomname, othervars):
     x = x.lower()
@@ -249,7 +271,7 @@ def mod(x, user, uid, roomname, othervars):
             elif func == 'remove':
                 if args not in _mods: return 'That user is not modded.'
                 else: _mods.remove(args)
-            else: return
+            else: return None
             f = open('mods.txt', 'w')
             for i in _mods:
                     f.write(i+'\n')
