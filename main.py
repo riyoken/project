@@ -6,6 +6,8 @@ import time
 import json
 import glob
 import threading
+import imp
+import text
 
 '''
 This is just the base bot with little or no personality or commands.
@@ -35,7 +37,7 @@ class Lemonator(cakelib2.Main):
             except Exception: return str('%s' % get_error())
 
     def reindex(self, string, user, uid, chat, othervars):
-        try: list(map(lambda x: exec('imp.reload({a})'.format(a=x.replace('.py','') if x.replace('.py','') != 'newillogic' else 'core')), glob.glob('*.py')))
+        try: list(map(lambda x: exec('imp.reload({a})'.format(a=x.replace('.py','') if x.replace('.py','') != 'main' else 'core')), glob.glob('*.py')))
         except Exception: return '%s' % get_error()
         return 'Reloaded Modules.'
 
@@ -66,19 +68,20 @@ class Lemonator(cakelib2.Main):
                 _prefix = True if func[0] == prefix else False
                 func = func[1:] if _prefix == True else func
             except: _prefix = False
-            if hasattr(self, func):
-                try:
-                    if othervars[3].rank < 2:
-                        chat.post('You do not have moderator privleges.')
-                        return
-                    chat.post(getattr(self, func)(string, user, uid, chat, othervars))
-                except Exception: chat.post(get_error())
-            elif hasattr(core, func):
-                try:
-                    resp = getattr(core, func)(string, user, uid, chat, othervars)
-                    if resp == None: resp = 'incorrect command usage'
-                    chat.post(resp)
-                except Exception: chat.post(get_error())
+            if _prefix:
+                if hasattr(self, func):
+                    try:
+                        if othervars[3].rank < 2:
+                            chat.post('You do not have moderator privleges.')
+                            return
+                        chat.post(getattr(self, func)(string, user, uid, chat, othervars))
+                    except Exception: chat.post(get_error())
+                elif hasattr(core, func):
+                    try:
+                        resp = getattr(core, func)(string, user, uid, chat, othervars)
+                        if resp == None: resp = 'incorrect command usage'
+                        chat.post(resp)
+                    except Exception: chat.post(get_error())
             
 debug = False
 if debug == True: core.room_list = ['timecapsule']            
